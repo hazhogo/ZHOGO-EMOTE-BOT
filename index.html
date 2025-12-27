@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ZHOGO Emote Panel</title>
+<title >ZHOGO Emote MENA SERVER</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
   --bg:#0b0b12;
   --glass:rgba(255,255,255,.08);
   --neon:#252525;
-  --neon2:#000000;
+  --neon2:#12ffaa;
 }
 
 *{box-sizing:border-box;font-family:'Orbitron',sans-serif}
@@ -23,45 +23,52 @@ body{
   color:#fff;
 }
 
-/* PARTICLES */
-canvas{
-  position:fixed;
-  inset:0;
-  z-index:-1;
-}
-
 /* HEADER */
 header{
   display:flex;
-  align-items:center;
   justify-content:center;
-  gap:15px;
+  align-items:center;
+  gap:12px;
   padding:20px;
 }
 
 header img{
-  width:48px;
+  width:45px;
   filter:drop-shadow(0 0 10px var(--neon));
 }
 
 /* INPUTS */
 .inputs{
   display:flex;
-  gap:10px;
-  justify-content:center;
-  flex-wrap:wrap;
-  margin-bottom:25px;
+  flex-direction:column;
+  gap:12px;
+  max-width:420px;
+  margin:0 auto 25px;
 }
 
-.inputs input{
+input{
   padding:14px;
   border-radius:12px;
   border:none;
   background:#111;
-  color:#fff;
-  min-width:220px;
+  color:#ccc;
   outline:none;
-  box-shadow:0 0 10px rgba(176,38,255,.4);
+  box-shadow:0 0 12px rgba(176,38,255,.4);
+}
+
+.uid-row{
+  display:flex;
+  gap:8px;
+}
+
+.uid-row button{
+  width:45px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(135deg,var(--neon),var(--neon2));
+  color:#fff;
+  font-size:22px;
+  cursor:pointer;
 }
 
 /* GRID */
@@ -89,16 +96,8 @@ header img{
   box-shadow:0 0 35px var(--neon2);
 }
 
-.card img{
-  width:90px;
-}
-
-.card span{
-  display:block;
-  font-size:12px;
-  opacity:.8;
-  margin-top:6px;
-}
+.card img{width:90px}
+.card span{display:block;font-size:12px;opacity:.8;margin-top:6px}
 
 /* LOADING */
 .loading{
@@ -108,7 +107,6 @@ header img{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:999;
 }
 
 .loader{
@@ -119,7 +117,6 @@ header img{
   border-radius:50%;
   animation:spin 1s linear infinite;
 }
-
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* TOAST */
@@ -132,56 +129,68 @@ header img{
   padding:12px 18px;
   border-radius:10px;
   box-shadow:0 0 15px var(--neon);
-  animation:fade .3s;
 }
-
-@keyframes fade{from{opacity:0;transform:translateY(10px)}}
 </style>
 </head>
 
 <body>
-
-<canvas id="c"></canvas>
 
 <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
 <audio id="successSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
 
 <header>
   <img src="image.png">
-  <h2 style="color:#12FFAA">ZHOGO Emote </h2>
+  <h2>ZHOGO Emote </h2>
 </header>
 
 <div class="inputs">
   <input id="team" placeholder="Team Code">
-  <input id="uid" placeholder="UID">
+
+  <div id="uids"></div>
+
+  <button onclick="addUID()">➕ Add UID</button>
 </div>
 
 <div class="grid" id="grid"></div>
 
-<div class="loading" id="loading">
-  <div class="loader"></div>
-</div>
+<div class="loading" id="loading"><div class="loader"></div></div>
 
 <script>
-/* PARTICLES */
-const c=document.getElementById("c"),ctx=c.getContext("2d");
-let w,h,p=[];
-function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
-addEventListener("resize",resize);resize();
-for(let i=0;i<80;i++)p.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+1,dx:Math.random()-.5,dy:Math.random()-.5});
-(function anim(){
-  ctx.clearRect(0,0,w,h);
-  p.forEach(a=>{
-    a.x+=a.dx;a.y+=a.dy;
-    if(a.x<0||a.x>w)a.dx*=-1;
-    if(a.y<0||a.y>h)a.dy*=-1;
-    ctx.fillStyle="#b026ff";
-    ctx.beginPath();
-    ctx.arc(a.x,a.y,a.r,0,7);
-    ctx.fill();
-  });
-  requestAnimationFrame(anim);
-})();
+const MAX_UID=6;
+const team=document.getElementById("team");
+const uidsBox=document.getElementById("uids");
+
+/* LOAD SAVED */
+team.value=localStorage.getItem("team")||"";
+const savedUIDs=JSON.parse(localStorage.getItem("uids")||"[]");
+
+/* UID FUNCTIONS */
+function addUID(val=""){
+  if(uidsBox.children.length>=MAX_UID) return toast("Max 6 UID");
+  const row=document.createElement("div");
+  row.className="uid-row";
+  row.innerHTML=`
+    <input placeholder="UID ${uidsBox.children.length+1}" value="${val}">
+    <button onclick="removeUID(this)">−</button>`;
+  uidsBox.appendChild(row);
+}
+
+function removeUID(btn){
+  btn.parentElement.remove();
+  saveUIDs();
+}
+
+function saveUIDs(){
+  const arr=[...uidsBox.querySelectorAll("input")].map(i=>i.value);
+  localStorage.setItem("uids",JSON.stringify(arr));
+}
+
+/* INIT UID */
+(savedUIDs.length?savedUIDs:[""]).forEach(v=>addUID(v));
+
+/* AUTO SAVE */
+team.oninput=()=>localStorage.setItem("team",team.value);
+uidsBox.oninput=saveUIDs;
 
 /* EMOTES */
 const emotes=[
@@ -254,8 +263,9 @@ emotes.forEach(e=>{
 
 /* API */
 function sendEmote(id){
-  const tc=team.value, u=uid.value;
-  if(!tc||!u) return toast("Enter Team Code & UID");
+  const tc=team.value;
+  const u=[...uidsBox.querySelectorAll("input")].map(i=>i.value);
+  if(!tc||!u[0]) return toast("Team Code & UID1 required");
 
   clickSound.play();
   loading.style.display="flex";
@@ -267,12 +277,12 @@ function sendEmote(id){
   setTimeout(()=>{
     loading.style.display="none";
     successSound.play();
-    toast("Emote Sent Successfully");
+    toast("Emote Sent");
   },2500);
 }
 
-function send(tc,uid,id){
-  fetch(`https://epapi-ytxx.onrender.com/join?tc=${tc}&uid1=${uid}&emote_id=${id}`);
+function send(tc,u,id){
+  fetch(`https://zhogo-emote-api-1.onrender.com/join?tc=${tc}&uid1=${u[0]||""}&uid2=${u[1]||""}&uid3=${u[2]||""}&uid4=${u[3]||""}&uid5=${u[4]||""}&uid6=${u[5]||""}&emote_id=${id}`);
 }
 
 /* TOAST */
