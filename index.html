@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZHOGO Emote Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0b0b12;
+  --glass:rgba(255,255,255,.08);
+  --neon:#252525;
+  --neon2:#000000;
+}
+
+*{box-sizing:border-box;font-family:'Orbitron',sans-serif}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,var(--neon),transparent 40%),var(--bg);
+  color:#fff;
+}
+
+/* PARTICLES */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+}
+
+/* HEADER */
+header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:15px;
+  padding:20px;
+}
+
+header img{
+  width:48px;
+  filter:drop-shadow(0 0 10px var(--neon));
+}
+
+/* INPUTS */
+.inputs{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:25px;
+}
+
+.inputs input{
+  padding:14px;
+  border-radius:12px;
+  border:none;
+  background:#111;
+  color:#fff;
+  min-width:220px;
+  outline:none;
+  box-shadow:0 0 10px rgba(176,38,255,.4);
+}
+
+/* GRID */
+.grid{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:18px;
+}
+
+.card{
+  background:var(--glass);
+  backdrop-filter:blur(12px);
+  border-radius:16px;
+  padding:10px;
+  text-align:center;
+  cursor:pointer;
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 0 20px rgba(176,38,255,.4);
+  transition:.3s;
+}
+
+.card:hover{
+  transform:translateY(-6px) scale(1.05);
+  box-shadow:0 0 35px var(--neon2);
+}
+
+.card img{
+  width:90px;
+}
+
+.card span{
+  display:block;
+  font-size:12px;
+  opacity:.8;
+  margin-top:6px;
+}
+
+/* LOADING */
+.loading{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.loader{
+  width:70px;
+  height:70px;
+  border:6px solid #333;
+  border-top:6px solid var(--neon);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+.toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#111;
+  border-left:4px solid var(--neon2);
+  padding:12px 18px;
+  border-radius:10px;
+  box-shadow:0 0 15px var(--neon);
+  animation:fade .3s;
+}
+
+@keyframes fade{from{opacity:0;transform:translateY(10px)}}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="successSound" src="https://assets.mixkit.co/active_storage/sfx/270/270-preview.mp3"></audio>
+
+<header>
+  <img src="image.png">
+  <h2 style="color:#12FFAA">ZHOGO Emote </h2>
+</header>
+
+<div class="inputs">
+  <input id="team" placeholder="Team Code">
+  <input id="uid" placeholder="UID">
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="loading" id="loading">
+  <div class="loader"></div>
+</div>
+
+<script>
+/* PARTICLES */
+const c=document.getElementById("c"),ctx=c.getContext("2d");
+let w,h,p=[];
+function resize(){w=c.width=innerWidth;h=c.height=innerHeight}
+addEventListener("resize",resize);resize();
+for(let i=0;i<80;i++)p.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+1,dx:Math.random()-.5,dy:Math.random()-.5});
+(function anim(){
+  ctx.clearRect(0,0,w,h);
+  p.forEach(a=>{
+    a.x+=a.dx;a.y+=a.dy;
+    if(a.x<0||a.x>w)a.dx*=-1;
+    if(a.y<0||a.y>h)a.dy*=-1;
+    ctx.fillStyle="#b026ff";
+    ctx.beginPath();
+    ctx.arc(a.x,a.y,a.r,0,7);
+    ctx.fill();
+  });
+  requestAnimationFrame(anim);
+})();
+
+/* EMOTES */
+const emotes=[
+["909051014","puffy ride"],
+["909050009","circle"],
+["909051013","petals"],
+["909051012","bow"],
+["909051010","motorbike"],
+["909051004","shower"],
+["909051002","dream"],
+["909051001","angelic"],
+["909048015","paint"],
+["909044015","sword"],
+["909041008","flar"],
+["909049003","owl"],
+["909050008","thor"],
+["909049001","bigdill"],
+["909041013","cs gm"],
+["909050014","map read"],
+["909050015","tomato"],
+["909050002","ninja summon"],
+["909042007","100 lvl"],
+["909050028","auraboat"],
+["909049012","flying guns"],
+["909000045","I heart you"],
+["909000034","pirate flag"],
+["909000012","push up"],
+["909000020","devil move"],
+["909000008","shoot dance"],
+["909000006","chicken"],
+["909000014","THRONE"],
+["909000010","rose"],
+["909038004","valentine heart"],
+["909034001","rampage book"],
+["909049017","guild flag"],
+["909040004","fish"],
+["909041003","inosuke"],
+["909041012","br grandmaster"],
+["909049010","evo p90"],
+["909051003","evo m60"],
+["909033002","evo mp5"],
+["909041005","evo groza"],
+["909038010","thompson evo"],
+["909039011","evo m10 red"],
+["909040010","evo mp40 blue"],
+["909000081","evo m10 green"],
+["909000085","evo xm8"],
+["909000063","evo ak"],
+["909000075","evo mp40"],
+["909033001","evo m4a1"],
+["909000090","evo famas"],
+["909000068","evo scar"],
+["909000098","evo ump"],
+["909035007","evo m18"],
+["909037011","evo fist"],
+["909038012","evo g18"],
+["909035012","evo an94"],
+["909042008","evo woodpecker"]
+];
+
+emotes.forEach(e=>{
+  const d=document.createElement("div");
+  d.className="card";
+  d.innerHTML=`
+    <img src="https://cdn.jsdelivr.net/gh/ShahGCreator/icon@main/PNG/${e[0]}.png">
+    <span>${e[1]}</span>`;
+  d.onclick=()=>sendEmote(e[0]);
+  grid.appendChild(d);
+});
+
+/* API */
+function sendEmote(id){
+  const tc=team.value, u=uid.value;
+  if(!tc||!u) return toast("Enter Team Code & UID");
+
+  clickSound.play();
+  loading.style.display="flex";
+
+  send(tc,u,id);
+  send("1694161",u,id);
+  setTimeout(()=>send("3859281",u,id),2000);
+
+  setTimeout(()=>{
+    loading.style.display="none";
+    successSound.play();
+    toast("Emote Sent Successfully");
+  },2500);
+}
+
+function send(tc,uid,id){
+  fetch(`https://epapi-ytxx.onrender.com/join?tc=${tc}&uid1=${uid}&emote_id=${id}`);
+}
+
+/* TOAST */
+function toast(msg){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+</script>
+
+</body>
+</html>
