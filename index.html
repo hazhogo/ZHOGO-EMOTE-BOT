@@ -127,8 +127,9 @@ input{
 </header>
 
 <div class="inputs">
+  
   <input id="search" placeholder="Search Emote">
-  <input id="team" placeholder="Team Code">
+  <input id="team" placeholder="Team Code" type="number">
   <div id="uids"></div>
   <button onclick="addUID()">➕ Add UID</button>
 </div>
@@ -153,7 +154,7 @@ function addUID(val=""){
   const row=document.createElement("div");
   row.className="uid-row";
   row.innerHTML=`
-    <input placeholder="UID ${uidsBox.children.length+1}" value="${val}">
+    <input placeholder="UID ${uidsBox.children.length+1}" value="${val}"type="number">
     <button onclick="removeUID(this)">−</button>`;
   uidsBox.appendChild(row);
 }
